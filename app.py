@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2018-12-09 14:47
 # @Author  : Yihao Wang
-# @Site    : 
+# @Site    :
 # @File    : app.py
 # @Software: PyCharm
 
 from flask import Flask
 from flask_restful import Api
 from Resources.availability import Availability, AvailabilityList
+from Resources.rate import Rate, RateList
+from Resources.inventory import Inventory, InventoryList
 import db
 import os
 
@@ -20,6 +22,10 @@ api = Api(app)
 
 api.add_resource(Availability, '/avail/<string:hotel_code>')
 api.add_resource(AvailabilityList, '/avails')
+api.add_resource(Rate, '/rate/<string:hotel_code>')
+api.add_resource(RateList, '/rates')
+api.add_resource(Inventory, '/inv/<string:hotel_code>')
+api.add_resource(InventoryList, '/invs')
 
 
 if __name__ == '__main__':
@@ -32,4 +38,4 @@ if __name__ == '__main__':
 		def create_tables():
 			db.create_all()
 
-	app.run(port=5000)
+	app.run(port=5000, debug=True)

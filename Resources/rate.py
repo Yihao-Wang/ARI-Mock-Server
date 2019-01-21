@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2018-12-15 14:13
+# @Time    : 2019-01-17 17:27
 # @Author  : Yihao Wang
 # @Site    : 
-# @File    : availability.py
+# @File    : rate.py
 # @Software: PyCharm
 
 from flask_restful import Resource, reqparse
-from Models.availModel import AvailabilityModel
+from Models.rateModel import RateModel
 
 req_body_help_message = 'This field cannot be left unfilled.'
 
 
-class Availability(Resource):
+class Rate(Resource):
 	root_parser = reqparse.RequestParser()
 	'''
 	we use RequestParser to define what data, types of data the API accept
 	'''
 	root_parser.add_argument('hotel_code', type=str, required=True, help=req_body_help_message)
 	root_parser.add_argument('detail', type=dict, required=True, help=req_body_help_message)
-	root_parser.add_argument('los', type=int, required=True, help=req_body_help_message)
-	root_parser.add_argument('date', type=str, required=True, help=req_body_help_message)
+	root_parser.add_argument('price', type=float, required=True, help=req_body_help_message)
+	root_parser.add_argument('rate_date', type=str, required=True, help=req_body_help_message)
 
 	def get(self, hotel_code):
 		'''
@@ -31,10 +31,10 @@ class Availability(Resource):
 		### In-Memory Setup ###
 		avail = next(filter(lambda x: x['hotel_code'] == hotel_code, avails), None)
 		'''
-		avail = AvailabilityModel.find_by_hotel_code(hotel_code)
-		if avail:
-			return {'avails': list(map(lambda x: x.json(), avail))}
-		return {'message': 'Availability Not Found'}, 404
+		rate = RateModel.find_by_hotel_code(hotel_code)
+		if rate:
+			return {'rates': list(map(lambda x: x.json(), rate))}
+		return {'message': 'Rate Not Found'}, 404
 
 	def post(self, hotel_code):
 		'''
@@ -55,26 +55,26 @@ class Availability(Resource):
 				'los': avail_data['los'],
 				'date': avail_data['date']
 				}
-		
+
 		if next(filter(lambda x: x['hotel_code'] == hotel_code
 		                and x['detail']['room_type'] == avail_data['detail']['room_type']
 		                and x['detail']['rate_plan'] == avail_data['detail']['rate_plan']
 						and x['los'] == avail_data['los']
 		                and x['date'] == avail_data['date'], avails), None)
 		 '''
-		avail_data = Availability.root_parser.parse_args()
-		if AvailabilityModel.find_by_conditions(hotel_code,
-			                                    avail_data['detail']['room_type'],
-			                                    avail_data['detail']['rate_plan'],
-			                                    avail_data['los'],
-			                                    avail_data['date']):
-			return {'message': 'The Same Availability Is Already Exist.'}, 400
-		avail = AvailabilityModel(**avail_data, **avail_data.detail)
+		rate_data = Rate.root_parser.parse_args()
+		if RateModel.find_by_conditions(hotel_code,
+		                                        rate_data['detail']['room_type'],
+		                                        rate_data['detail']['rate_plan'],
+		                                        rate_data['price'],
+		                                        rate_data['rate_date']):
+			return {'message': 'The Same Rate Is Already Exist.'}, 400
+		rate = RateModel(**rate_data, **rate_data.detail)
 		try:
-			avail.save_to_db()
+			rate.save_to_db()
 		except:
 			return {'message': 'An Error Occurred During Data Insertion.'}, 500
-		return avail.json(), 201
+		return rate.json(), 201
 
 	def delete(self, hotel_code):
 		'''
@@ -99,19 +99,19 @@ class Availability(Resource):
 			              or x['date'] != delete_avail_data['date'], avails))
 			return {'message': 'The availability is deleted'}, 200
 		'''
-		delete_avail_data = Availability.root_parser.parse_args()
-		avail = AvailabilityModel.find_by_conditions(hotel_code,
-		                                             delete_avail_data['detail']['room_type'],
-		                                             delete_avail_data['detail']['rate_plan'],
-		                                             delete_avail_data['los'],
-		                                             delete_avail_data['date'])
-		if avail:
+		delete_rate_data = Rate.root_parser.parse_args()
+		rate = RateModel.find_by_conditions(hotel_code,
+		                                             delete_rate_data['detail']['room_type'],
+		                                             delete_rate_data['detail']['rate_plan'],
+		                                             delete_rate_data['price'],
+		                                             delete_rate_data['rate_date'])
+		if rate:
 			try:
-				avail.delete_from_db()
-				return {'message': 'The Availability Is Deleted.'}, 200
+				rate.delete_from_db()
+				return {'message': 'The Rate Is Deleted.'}, 200
 			except:
 				return {'message': 'An Error Occurred During Data Deletion.'}, 500
-		return {'message': 'Availability Not Found.'}, 404
+		return {'message': 'Rate Not Found.'}, 404
 
 	def put(self, hotel_code):
 		'''
@@ -141,26 +141,26 @@ class Availability(Resource):
 			avail.update(avail_data)
 		return avail, 201
 		'''
-		avail_data = Availability.root_parser.parse_args()
-		avail = AvailabilityModel.find_for_put(hotel_code,
-		                                    avail_data['detail']['room_type'],
-		                                    avail_data['detail']['rate_plan'],
-		                                    avail_data['date'])
-		if avail:
-			avail.los = avail_data['los']
+		rate_data = Rate.root_parser.parse_args()
+		rate = RateModel.find_for_put(hotel_code,
+		                                       rate_data['detail']['room_type'],
+		                                       rate_data['detail']['rate_plan'],
+		                                       rate_data['rate_date'])
+		if rate:
+			rate.price = rate_data['price']
 		else:
-			avail = AvailabilityModel(**avail_data, **avail_data.detail)
+			rate = RateModel(**rate_data, **rate_data.detail)
 		try:
-			avail.save_to_db()
+			rate.save_to_db()
 		except:
 			return {'message': 'An Error Occurred During Data Insertion.'}, 500
-		return avail.json()
+		return rate.json()
 
 
-class AvailabilityList(Resource):
+class RateList(Resource):
 	def get(self):
 		'''
 
 		:return:
 		'''
-		return {'avails': list(map(lambda x: x.json(), AvailabilityModel.query.all()))}
+		return {'rates': list(map(lambda x: x.json(), RateModel.query.all()))}

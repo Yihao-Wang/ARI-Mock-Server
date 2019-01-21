@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2019-01-03 14:18
+# @Time    : 2019-01-17 17:44
 # @Author  : Yihao Wang
 # @Site    : 
-# @File    : availModel.py
+# @File    : rateModel.py
 # @Software: PyCharm
 
 from db import db
 
 
-class AvailabilityModel(db.Model):
-    __tablename__ = 'availability'
+class RateModel(db.Model):
+    __tablename__ = 'rate'
 
     id = db.Column(db.Integer, primary_key=True)
     hotel_code = db.Column(db.String(40))
     room_type = db.Column(db.String(20))
     rate_plan = db.Column(db.String(20))
-    los = db.Column(db.Integer)
-    date = db.Column(db.String(20))
+    price = db.Column(db.Float(precision=2))
+    rate_date = db.Column(db.String(20))
 
-    def __init__(self, hotel_code, room_type, rate_plan, los, date, detail):
-        self.date = date
+    def __init__(self, hotel_code, room_type, rate_plan, price, rate_date, detail):
+        self.rate_date = rate_date
         self.hotel_code = hotel_code
-        self.los = los
+        self.price = price
         self.rate_plan = rate_plan
         self.room_type = room_type
         self.detail = detail
@@ -34,8 +34,8 @@ class AvailabilityModel(db.Model):
 					'room_type': self.room_type,
 					'rate_plan': self.rate_plan
 					},
-                'los': self.los,
-				'date': self.date
+                'price': self.price,
+				'rate_date': self.rate_date
 	    }
 
     @classmethod
@@ -43,19 +43,19 @@ class AvailabilityModel(db.Model):
         return cls.query.filter_by(hotel_code=hotel_code).all()
 
     @classmethod
-    def find_by_conditions(cls, hotel_code, room_type, rate_plan, los, date):
+    def find_by_conditions(cls, hotel_code, room_type, rate_plan, price, rate_date):
         return cls.query.filter_by(hotel_code=hotel_code,
 	                           room_type=room_type,
 	                           rate_plan=rate_plan,
-	                           los=los,
-	                           date=date).first()
+	                           price=price,
+	                           rate_date=rate_date).first()
 
     @classmethod
-    def find_for_put(cls, hotel_code, room_type, rate_plan, date):
-	    return cls.query.filter_by(hotel_code=hotel_code,
+    def find_for_put(cls, hotel_code, room_type, rate_plan, rate_date):
+        return cls.query.filter_by(hotel_code=hotel_code,
 	                            room_type=room_type,
 	                            rate_plan=rate_plan,
-	                            date=date).first()
+	                            rate_date=rate_date).first()
 
     def save_to_db(self):
         db.session.add(self)
